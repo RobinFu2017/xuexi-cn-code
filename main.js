@@ -1,19 +1,20 @@
 !function () {
-    const e = require("path"), {app: n, BrowserWindow: o, ipcMain: t, Menu: s} =
-            require("electron"), {getRandomNumberBetween: a} = require("./preload/util.js"),
+    const e = require("path");
+    const {app: app, BrowserWindow: browser, ipcMain: ipc, Menu: menu} = require("electron");
+    const {getRandomNumberBetween: a} = require("./preload/util.js"),
         r = require("./preload/flags.js");
     let l = null, i = !1;
     const {headless: u, dev: c, multiUser: d, userID: w, UA: p, autoLoginSettings: g} = r();
     let m = void 0;
-    w ? m = `persist:${w}` : g && g.userName ? m = `persist:user-${g.userName}` : !d && n.requestSingleInstanceLock() || (m = `${Math.random()}`);
+    w ? m = `persist:${w}` : g && g.userName ? m = `persist:user-${g.userName}` : !d && app.requestSingleInstanceLock() || (m = `${Math.random()}`);
     const b = e => {
-        s.setApplicationMenu(s.buildFromTemplate(e))
-    }, h = [{label: "Love学习强国"}, {label: `v${n.getVersion()}`}];
+        menu.setApplicationMenu(menu.buildFromTemplate(e))
+    }, h = [{label: "fxm学习强国"}, {label: `v${app.getVersion()}`}, {label: "如果觉得好就去支付宝给小学生捐钱吧~"}];
     let k = [];
-    n.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required"), n.on("window-all-closed", function () {
-        n.quit()
-    }), n.on("ready", function () {
-        if (l = new o({
+    app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required"), app.on("window-all-closed", function () {
+        app.quit()
+    }), app.on("ready", function () {
+        if (l = new browser({
             title: "Love 学习强国",
             width: 1e3,
             height: 600,
@@ -43,26 +44,26 @@
                 }, 1e3 * a(0, 2e3))
             }), i || l.webContents.reload()
         }, 864e5)
-    }), t.on("lock", () => {
+    }), ipc.on("lock", () => {
         i = !0
-    }), t.on("unlock", () => {
+    }), ipc.on("unlock", () => {
         i = !1
-    }), t.on("islocked", e => {
+    }), ipc.on("islocked", e => {
         e.returnValue = i
     });
     let f = [];
-    t.on("tasks-getAll", e => {
+    ipc.on("tasks-getAll", e => {
         e.returnValue = f
-    }), t.on("tasks-set", (e, n) => {
+    }), ipc.on("tasks-set", (e, n) => {
         f = n
-    }), t.on("tasks-add", (e, ...n) => {
+    }), ipc.on("tasks-add", (e, ...n) => {
         c && console.log(n), f.push(...n)
-    }), t.on("isHeadless", e => {
+    }), ipc.on("isHeadless", e => {
         e.returnValue = u
-    }), t.on("log", (e, ...n) => {
+    }), ipc.on("log", (e, ...n) => {
         console.log(...n)
     });
-    t.on("save-cookies", async () => {
+    ipc.on("save-cookies", async () => {
         const e = l.webContents.session.cookies, n = l.webContents.getURL(), o = +new Date / 1e3 + 31536e4, t = t => {
             e.set({url: n, ...t, expirationDate: o}, e => {
                 if (e) throw e
@@ -77,9 +78,9 @@
         }))()).forEach(e => {
             t(e)
         })
-    }), t.on("getAutoLoginSettings", e => {
+    }), ipc.on("getAutoLoginSettings", e => {
         e.returnValue = g
-    }), t.on("refresh-menu", (e, n) => {
+    }), ipc.on("refresh-menu", (e, n) => {
         if (n.score) {
             const {today: e, total: o, types: t} = n.score;
             k = [{label: `今日积分: ${e}`}, {label: `总积分: ${o}`}, ...t.map(e => ({label: `${e}`}))]
